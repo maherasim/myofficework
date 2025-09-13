@@ -1,0 +1,104 @@
+{
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The Laravel Framework.",
+    "keywords": [
+        "framework",
+        "laravel"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.1|^8.2",
+        "aws/aws-sdk-php": "^3.343.12",
+        "barryvdh/laravel-dompdf": "^3.1.1",
+        "bavix/laravel-wallet": "^10.1.7",
+        "eluceo/ical": "^2.14.0",
+        "erusev/parsedown": "^1.7.4",
+        "intervention/image": "^2.7",
+        "johngrogg/ics-parser": "^3.4.1",
+        "kalnoy/nestedset": "^6.0.5",
+        "laravel/framework": "^10.0",
+        "laravel/socialite": "^5.20.0",
+        "laravel/tinker": "^2.8",
+        "laravel/ui": "^4.6.1",
+        "league/flysystem-aws-s3-v3": "^3.29.0",
+        "league/omnipay": "^3.2.1",
+        "maatwebsite/excel": "^3.1.64",
+        "mews/purifier": "^3.4.3",
+        "munafio/chatify": "^1.6",
+        "omnipay/migs": "dev-master",
+        "omnipay/paypal": "^3.0.2",
+        "omnipay/stripe": "^3.2.0",
+        "phpmailer/phpmailer": "^6.10.0",
+        "propaganistas/laravel-phone": "^5.3.6",
+        "pythias/openai-client": "^0.0.1",
+        "ramsey/uuid": "^4.7.6",
+        "rap2hpoutre/laravel-log-viewer": "^2.5.0",
+        "simplesoftwareio/simple-qrcode": "^4.2.0",
+        "spatie/laravel-image-optimizer": "^1.8.2",
+        "spatie/laravel-permission": "^6.18.0",
+        "twilio/sdk": "^8.6.1",
+        "tymon/jwt-auth": "^2.2.1",
+        "yajra/laravel-datatables": "^10.1.0",
+        "yajra/laravel-datatables-oracle": "^10.11.4"
+    },
+    "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.15.4",
+        "beyondcode/laravel-dump-server": "^2.1.0",
+        "fakerphp/faker": "^1.20",
+        "filp/whoops": "^2.18.0",
+        "mockery/mockery": "^1.6.12",
+        "nunomaduro/collision": "^7.12.0",
+        "phpunit/phpunit": "^9.5"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "composer/package-versions-deprecated": true,
+            "laravel/framework": true,
+            "laravel/sail": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Plugins\\": "plugins/",
+            "Custom\\": "custom/",
+            "Modules\\": "modules/"
+        },
+        "classmap": [
+            "database/seeds",
+            "database/factories"
+        ],
+        "files": [
+            "app/Helpers/AppHelper.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi"
+        ]
+    }
+}
