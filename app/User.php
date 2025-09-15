@@ -99,6 +99,11 @@ class User extends Authenticatable implements MustVerifyEmail, JWTSubject, Walle
         'email_verified_at' => 'datetime',
     ];
 
+    protected $dates = [
+        'activation_email_sent_at',
+        'welcome_email_sent_at',
+    ];
+
     public function getMeta($key, $default = '')
     {
         //if(isset($this->cachedMeta[$key])) return $this->cachedMeta[$key];
@@ -115,44 +120,7 @@ class User extends Authenticatable implements MustVerifyEmail, JWTSubject, Walle
 
         return $default;
     }
-    public function sendActivationEmail()
-{
-    // Fetch Template #96
-    $template = DB::table('email_subjects')
-                  ->where('token', 'MYOFFICE___USER__ACTIVATION_EMAIL')
-                  ->first();
-
-    $subject = $template->subject ?? 'Activate Your Account';
-    $body    = $template->body ?? 'Please click the link to activate your account.';
-
-    Mail::to($this->email)->send(new ActivationEmail($this, $subject, $body));
-}
-
-public function sendGuestWelcomeEmail()
-{
-    // Template #102
-    $template = DB::table('email_subjects')
-                  ->where('token', 'GUEST_WELCOME_EMAIL')
-                  ->first();
-
-    $subject = $template->subject ?? 'Welcome!';
-    $body    = $template->body ?? 'Welcome to our platform!';
-
-    Mail::to($this->email)->send(new GuestWelcomeEmail($this, $subject, $body));
-}
-
-public function sendHostWelcomeEmail()
-{
-    // Template #101
-    $template = DB::table('email_subjects')
-                  ->where('token', 'HOST_WELCOME_EMAIL')
-                  ->first();
-
-    $subject = $template->subject ?? 'Welcome Host!';
-    $body    = $template->body ?? 'Welcome to our platform!';
-
-    Mail::to($this->email)->send(new HostWelcomeEmail($this, $subject, $body));
-}
+    // Removed ad-hoc mail methods in favor of existing, token-based methods below
 
 
     public function addMeta($key, $val, $multiple = false)
@@ -519,27 +487,47 @@ public function sendHostWelcomeEmail()
 
     public function sendEmailUserVerificationNotification($register_as)
     {
-        $actionUrl = $this->verificationUrl($this);
-        if($register_as=='host'){
-            $EmailSubject = EmailSubject::where('token', 'MYOFFICE___HOST__ACTIVATION_EMAIL')->first();
+        if (!$this->activation_email_sent_at) {
+            $actionUrl = $this->verificationUrl($this);
+            if($register_as=='host'){
+                $EmailSubject = EmailSubject::where('token', 'MYOFFICE___HOST__ACTIVATION_EMAIL')->first();
+            } else {
+                $EmailSubject = EmailSubject::where('token', 'MYOFFICE___USER__ACTIVATION_EMAIL')->first();
+            }
+            $EmailTemplate = EmailTemplate::where('domain', 9)->where('subject_id', $EmailSubject['id'])->first();
+            $SubjectText = setting_item('subject_email_verify_register_user');
+            Mail::to($this->email)->send(new EmailUserVerifyRegister($this, $SubjectText, $EmailTemplate, $actionUrl));
+            $this->activation_email_sent_at = now();
+            $this->save();
         } else {
-            $EmailSubject = EmailSubject::where('token', 'MYOFFICE___USER__ACTIVATION_EMAIL')->first();
+            // Always allow resend, but keep timestamp latest
+            $actionUrl = $this->verificationUrl($this);
+            if($register_as=='host'){
+                $EmailSubject = EmailSubject::where('token', 'MYOFFICE___HOST__ACTIVATION_EMAIL')->first();
+            } else {
+                $EmailSubject = EmailSubject::where('token', 'MYOFFICE___USER__ACTIVATION_EMAIL')->first();
+            }
+            $EmailTemplate = EmailTemplate::where('domain', 9)->where('subject_id', $EmailSubject['id'])->first();
+            $SubjectText = setting_item('subject_email_verify_register_user');
+            Mail::to($this->email)->send(new EmailUserVerifyRegister($this, $SubjectText, $EmailTemplate, $actionUrl));
+            $this->activation_email_sent_at = now();
+            $this->save();
         }
-        $EmailTemplate = EmailTemplate::where('domain', 9)->where('subject_id', $EmailSubject['id'])->first();
-        $EmailSubject = setting_item('subject_email_verify_register_user');
-        $a = Mail::to($this->email)->send(new EmailUserVerifyRegister($this, $EmailSubject, $EmailTemplate, $actionUrl));
     }
 
     public function sendEmailWelcomeNotification($register_as)
     {
-        if($register_as=='host'){
-            $EmailSubject = EmailSubject::where('token', 'MYOFFICE___HOST__WELCOME_EMAIL')->first();
-        } else {
-            $EmailSubject = EmailSubject::where('token', 'MYOFFICE___USER__WELCOME_EMAIL')->first();
+        if (!$this->welcome_email_sent_at) {
+            if($register_as=='host'){
+                $EmailSubject = EmailSubject::where('token', 'MYOFFICE___HOST__WELCOME_EMAIL')->first();
+            } else {
+                $EmailSubject = EmailSubject::where('token', 'MYOFFICE___USER__WELCOME_EMAIL')->first();
+            }
+            $EmailTemplate = EmailTemplate::where('domain', 9)->where('subject_id', $EmailSubject['id'])->first();
+            Mail::to($this->email)->send(new EmailUserWelcome($this, $EmailSubject, $EmailTemplate));
+            $this->welcome_email_sent_at = now();
+            $this->save();
         }
-       
-        $EmailTemplate = EmailTemplate::where('domain', 9)->where('subject_id', $EmailSubject['id'])->first();
-        Mail::to($this->email)->send(new EmailUserWelcome($this, $EmailSubject, $EmailTemplate));
     }
 
     public function sendEmailRegisteredNotification($register_as)

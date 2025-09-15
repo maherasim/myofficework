@@ -589,7 +589,7 @@ class UserController extends FrontendController
     
         // Only send Activation Email (Template #96)
         if (setting_item('enable_verify_email_register_user')) {
-            $user->sendActivationEmail(); // NEW method using Template #96
+            $user->sendEmailUserVerificationNotification($register_as);
         }
     
         $platform = $request->input('platform') ?? 'web';
